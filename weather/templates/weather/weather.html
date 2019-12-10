@@ -35,6 +35,9 @@
                                 </button>
                             </div>
                         </div>
+                        {% if  toast %}
+                        <div class="notification {{ toast_css }}">{{ toast }}</div>
+                        {% endif %}
                     </form>
                 </div>
             </div>
@@ -57,10 +60,16 @@
                                     <p>
                                         <span class="title">{{ ctx.location }}</span>
                                         <br>
-                                        <span class="subtitle">{{ ctx.temperature }}</span>
+                                        <span class="subtitle">{{ ctx.temperature }} °C</span>
                                         <br> {{ ctx.description }}
                                     </p>
                                 </div>
+                            </div>
+                            <div class="media-right">
+                                <a href="{% url 'delete' ctx.location %}">
+                                    <button class="delete"></button>
+                                </a>
+
                             </div>
                         </article>
                     </div>

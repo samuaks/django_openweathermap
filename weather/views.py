@@ -1,5 +1,5 @@
 import requests
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import City
 from .forms import LocForm
 
@@ -8,10 +8,35 @@ def index(request):
     url = 'https://api.openweathermap.org/data/2.5/weather?q={}&units=metric&appid=bc31e2ebac716e0f1832bbed990b7cbd&lang=fi'
 
 
+
+    message_if_error = ''
+    toast = ''
+    toast_css = ''
+
     if request.method == 'POST':
         form = LocForm(request.POST)
-        form.save()
 
+        if form.is_valid():
+            loc_filter = form.cleaned_data['name']
+            exists = City.objects.filter(name=loc_filter).count()
+
+            if exists == 0:
+                response = requests.get(url.format(loc_filter)).json()
+                if response['cod'] == 200:
+                    form.save()
+                else:
+                    message_if_error = 'You are either from the future or stuck in the past'
+            else:
+                message_if_error = 'Location already exists'
+
+        if message_if_error:
+                toast = message_if_error
+                toast_css = 'is-danger'
+        else:
+            toast = 'Location is valid'
+            toast_css = 'is-success'
+
+    print(message_if_error)
     form = LocForm()
 
     cities = City.objects.all()
@@ -31,7 +56,17 @@ def index(request):
 
         data_dic.append(dic)
 
-    print(data_dic)
-    context = {'data_dic' : data_dic, 'form' : form}
+  
+    context = {
+        'data_dic' : data_dic,
+        'form' : form,
+        'toast' : toast,
+        'toast_css' : toast_css
+    }
 
     return render(request, 'weather/weather.html', context)
+
+def delete(request, city_name):
+    City.objects.get(name=city_name).delete()
+
+    return redirect('home')
